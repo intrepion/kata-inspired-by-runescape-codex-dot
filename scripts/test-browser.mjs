@@ -93,7 +93,25 @@ try {
   await page.locator('[data-tab="pack"]').click();
   console.log("Browser QA: gathering, cooking and firemaking passed");
   await action("rat1");
-  await waitText("You defeat the giant rat", 90000);
+  const combatStarted = Date.now();
+  while (
+    !(await page.locator("#log-lines").textContent()).includes(
+      "You defeat the giant rat",
+    )
+  ) {
+    if (errors.length) throw Error(errors.join("\n"));
+    if (Date.now() - combatStarted > 180000)
+      throw Error(
+        "Combat did not finish: " +
+          (await page.locator("#log-lines").textContent()),
+      );
+    const hp = Number(
+      (await page.locator("#hp-text").textContent()).split("/")[0],
+    );
+    if (hp <= 7 && (await page.locator('[data-item-id="shrimp"]').count()))
+      await page.locator('[data-item-id="shrimp"]').first().click();
+    await page.waitForTimeout(500);
+  }
   await page.locator("#loot").click();
   assert.ok(await page.locator('[data-item-id="bones"]').count());
   await page.locator('[data-item-id="bones"]').first().click();
@@ -159,6 +177,19 @@ try {
   console.log(
     "PASS: HTTP WebGL, backlink, quests, pathfinding, copper+tin smelting, smithing, quest reward, banking, shopping, equip, fishing, cooking, woodcutting, firemaking, combat, loot, bones, skills, pause, help, save/reload, world click, reset cancel, mobile overflow.",
   );
+} catch (error) {
+  console.error("Browser errors:", errors);
+  console.error(
+    "Adventure log:",
+    await page
+      .locator("#log-lines")
+      .textContent()
+      .catch(() => "unavailable"),
+  );
+  await page
+    .screenshot({ path: "/tmp/embervale-test-failure.png", fullPage: true })
+    .catch(() => {});
+  throw error;
 } finally {
   await app.close();
 }
