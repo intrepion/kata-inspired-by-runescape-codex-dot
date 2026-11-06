@@ -1,0 +1,35 @@
+{
+  "sourceCommit": "46a8df1ea7b74f1435b1d422b7ecb54563f1529e",
+  "inputs": {
+    "assets/index-9GVcJWFr.js": "410a8a13c5ceb133001fd56b2371117c5a425152e5ae6849dd1234bc0bf28ea2",
+    "assets/index-BCgyKizh.css": "9c2d54d0546ee4780140813a3830f6b32d15df62c1cda5aa8c2b4b8d91b928be",
+    "assets/three-4Lz3Ykuz.js": "bfd6eda1b73116da5db3086d73bed5bbdd8fd1c6433a0ce54f7b9ca033ee21d4",
+    "index.html": "8a5070a6918a3487dc46c77add4c8aa866e6f2ae087f85015b294e8dde3c43f0",
+    "licenses/three-LICENSE.txt": "bfe119ea4fd413f5f7ca3fcd63adb0c4a073ed39daa2fe7d3e6b769e21272601"
+  },
+  "capturedAt": "2026-11-06T17:17:09Z",
+  "baseUrl": "http://127.0.0.1:59944/",
+  "tool": {
+    "name": "Playwright",
+    "version": "1.63.0"
+  },
+  "browser": {
+    "name": "Chromium",
+    "version": "153.0.8010.12"
+  },
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "steps": [
+    "Serve the unchanged production dist build through http://127.0.0.1 on an ephemeral port.",
+    "Open a clean Chromium context at 1440 × 1000, en-US, UTC, device scale 1.",
+    "Fix Date at 2026-11-06T00:00:00Z for the seeded model, without altering normal animation or gameplay timers.",
+    "Click Enter the valley, then enable Run using the public control.",
+    "Walk to Warden Elowen and accept the forge and cooking quests through normal dialogue.",
+    "Walk to the river fishing spot with the starting small net and naturally catch at least four raw shrimps."
+  ],
+  "clock": "2026-11-06T00:00:00Z",
+  "deployedBuild": null,
+  "notes": "Genuine public-control gameplay, locally served production artifact. Browser pixels unedited. No state/save injection, no mock screenshot, no deployed-build equivalence asserted."
+}

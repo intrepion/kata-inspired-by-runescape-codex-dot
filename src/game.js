@@ -1,87 +1,994 @@
-export const TICK_MS=600, SIZE={w:36,h:28}, SAVE_KEY='embervale.save.v1';
-export const SKILLS=['Attack','Strength','Defence','Hitpoints','Woodcutting','Firemaking','Fishing','Cooking','Mining','Smithing','Prayer'];
-export const XP=[0];let xpSum=0;for(let n=1;n<99;n++){xpSum+=Math.floor(n+300*2**(n/7));XP.push(Math.floor(xpSum/4));}
-export const level=xp=>{let l=1;while(l<99&&xp>=XP[l])l++;return l;};
-export const ITEMS={axe:{name:'Bronze axe',icon:'🪓',value:16,tool:true},pickaxe:{name:'Bronze pickaxe',icon:'⛏',value:10,tool:true},hammer:{name:'Hammer',icon:'⚒',value:1,tool:true},net:{name:'Small fishing net',icon:'◈',value:5,tool:true},tinderbox:{name:'Tinderbox',icon:'▣',value:1,tool:true},coins:{name:'Coins',icon:'●',stack:true,value:1},logs:{name:'Logs',icon:'🪵',value:4},oak:{name:'Oak logs',icon:'🪵',value:10},copper:{name:'Copper ore',icon:'◆',value:3},tin:{name:'Tin ore',icon:'◆',value:3},bar:{name:'Bronze bar',icon:'▰',value:8},raw:{name:'Raw shrimps',icon:'🦐',value:5},shrimp:{name:'Shrimps',icon:'🦐',value:8,heal:3},burnt:{name:'Burnt shrimps',icon:'♨',value:0},bones:{name:'Bones',icon:'🦴',value:1},dagger:{name:'Bronze dagger',icon:'†',value:10,weapon:4,attack:4,strength:3},sword:{name:'Bronze sword',icon:'⚔',value:26,weapon:4,attack:7,strength:6},shield:{name:'Wooden shield',icon:'⬡',value:20,defence:6},token:{name:'Valley seal',icon:'✦',value:0,stack:true}};
-export const NODES=[
- {id:'guide',name:'Warden Elowen',kind:'npc',x:16,y:14,action:'Talk',desc:'The valley warden has work for a new adventurer.'},
- {id:'bank',name:'Valley bank',kind:'bank',x:13,y:10,action:'Bank',desc:'Store your resources, then return to the wilds.'},
- {id:'shop',name:'Merrin’s general store',kind:'shop',x:19,y:10,action:'Trade',desc:'Buy equipment or sell gathered goods for coins.'},
- {id:'furnace',name:'Foundry furnace',kind:'furnace',x:10,y:15,action:'Smelt',desc:'Combine 1 copper ore and 1 tin ore into a bronze bar. 6.2 Smithing XP.'},
- {id:'anvil',name:'Smith’s anvil',kind:'anvil',x:12,y:17,action:'Smith',desc:'A hammer and 1 bronze bar forge a bronze dagger. 12.5 Smithing XP.'},
- {id:'range',name:'Cooking range',kind:'range',x:19,y:16,action:'Cook',desc:'Cook raw shrimps. Success grants 30 Cooking XP; food restores 3 HP.'},
- {id:'tree1',name:'Tree',kind:'tree',x:8,y:10,action:'Chop',desc:'Bronze axe required. Logs give 25 Woodcutting XP.'},
- {id:'tree2',name:'Tree',kind:'tree',x:6,y:14,action:'Chop',desc:'Bronze axe required. Logs give 25 Woodcutting XP.'},
- {id:'tree3',name:'Tree',kind:'tree',x:8,y:18,action:'Chop',desc:'Bronze axe required. Logs give 25 Woodcutting XP.'},
- {id:'oak',name:'Old oak',kind:'oak',x:5,y:7,action:'Chop',desc:'Requires Woodcutting 15. Oak logs give 37.5 XP.'},
- {id:'copper1',name:'Copper rock',kind:'copper',x:9,y:22,action:'Mine',desc:'Bronze pickaxe required. Copper gives 17.5 Mining XP.'},
- {id:'copper2',name:'Copper rock',kind:'copper',x:11,y:24,action:'Mine',desc:'Copper gives 17.5 Mining XP.'},
- {id:'tin1',name:'Tin rock',kind:'tin',x:13,y:23,action:'Mine',desc:'Bronze pickaxe required. Tin gives 17.5 Mining XP.'},
- {id:'fish1',name:'Net fishing spot',kind:'fish',x:24,y:15,action:'Fish',desc:'Small fishing net required. Catch shrimps for 10 Fishing XP.'},
- {id:'fish2',name:'Net fishing spot',kind:'fish',x:24,y:20,action:'Fish',desc:'Cast your net from the riverbank.'},
- {id:'rat1',name:'Giant rat',kind:'rat',x:19,y:22,action:'Attack',hp:5,attack:8,maxHit:1,defence:4,desc:'A level 3 giant rat. Auto-attacks until defeated or you walk away.'},
- {id:'rat2',name:'Giant rat',kind:'rat',x:22,y:24,action:'Attack',hp:5,attack:8,maxHit:1,defence:4,desc:'A level 3 giant rat. Drops bones and coins.'},
- {id:'goblin1',name:'Mire goblin',kind:'goblin',x:30,y:10,action:'Attack',hp:12,attack:15,maxHit:2,defence:9,desc:'A level 5 goblin. Cross the bridge with food and equipment.'},
- {id:'goblin2',name:'Mire goblin',kind:'goblin',x:32,y:16,action:'Attack',hp:12,attack:15,maxHit:2,defence:9,desc:'A level 5 goblin. Drops bones and coins.'},
- {id:'altar',name:'Wayside altar',kind:'altar',x:17,y:5,action:'Pray',desc:'A quiet sanctuary. Restores your prayer points.'}
+export const TICK_MS = 600,
+  SIZE = { w: 36, h: 28 },
+  SAVE_KEY = "embervale.save.v1";
+export const SKILLS = [
+  "Attack",
+  "Strength",
+  "Defence",
+  "Hitpoints",
+  "Woodcutting",
+  "Firemaking",
+  "Fishing",
+  "Cooking",
+  "Mining",
+  "Smithing",
+  "Prayer",
 ];
-export const QUESTS=[{id:'hearth',name:'A warm welcome',brief:'Bring 3 cooked shrimps to Warden Elowen.',reward:'75 coins · 150 Cooking XP',items:{shrimp:3}},{id:'forge',name:'From earth to steel',brief:'Forge a bronze dagger and bring it to Elowen.',reward:'100 coins · 200 Smithing XP',items:{dagger:1},crafted:true},{id:'watch',name:'Across the water',brief:'Defeat 3 mire goblins, then report to Elowen.',reward:'150 coins · 150 Attack XP · Valley seal',kills:3}];
-export function createGame(seed=Date.now()) {return {version:1,seed:seed>>>0,tick:0,p:{x:16,y:17,hp:10,energy:100,run:false,prayer:1},skills:Object.fromEntries(SKILLS.map(k=>[k,k==='Hitpoints'?1154:0])),inventory:[{id:'axe',qty:1},{id:'pickaxe',qty:1},{id:'net',qty:1},{id:'tinderbox',qty:1},{id:'hammer',qty:1},{id:'coins',qty:25}],bank:[],equipment:{weapon:'dagger',shield:null},style:'Attack',path:[],action:null,selected:null,nodes:Object.fromEntries(NODES.map(n=>[n.id,{hp:n.hp??0,respawn:0}])),quests:{},kills:0,crafted:0,logs:['Welcome to Embervale. Talk to Warden Elowen, or choose your own path.'],events:[],dialog:null,paused:false,savedAt:null};}
-export function random(s){let x=s.seed||123456789;x^=x<<13;x^=x>>>17;x^=x<<5;s.seed=x>>>0;return s.seed/4294967296;}
-export const count=(s,id,bag='inventory')=>s[bag].filter(v=>v.id===id).reduce((a,v)=>a+v.qty,0);
-export function add(s,id,qty=1,bag='inventory'){if(!ITEMS[id]||!Number.isSafeInteger(qty)||qty<1||!['inventory','bank'].includes(bag))return false;const list=s[bag],stack=bag==='bank'||ITEMS[id].stack;const existing=stack&&list.find(v=>v.id===id);if(bag==='inventory'&&list.length+(existing?0:stack?1:qty)>28)return false;if(existing)existing.qty+=qty;else if(stack)list.push({id,qty});else for(let n=0;n<qty;n++)list.push({id,qty:1});return true;}
-export function remove(s,id,qty=1,bag='inventory'){if(!ITEMS[id]||!Number.isSafeInteger(qty)||qty<0||!['inventory','bank'].includes(bag)||count(s,id,bag)<qty)return false;for(let i=s[bag].length-1;i>=0&&qty;i--){const v=s[bag][i];if(v.id!==id)continue;const n=Math.min(qty,v.qty);v.qty-=n;qty-=n;if(!v.qty)s[bag].splice(i,1);}return true;}
-export function log(s,msg){s.logs.push(msg);s.logs=s.logs.slice(-40);}
-export function gain(s,skill,amount){const before=level(s.skills[skill]);s.skills[skill]+=amount;s.events.push({kind:'xp',text:`+${amount} ${skill}`,x:s.p.x,y:s.p.y});const after=level(s.skills[skill]);if(after>before){log(s,`${skill} level ${after}! New possibilities await.`);if(skill==='Hitpoints')s.p.hp+=after-before;}}
-export function walkable(x,y){return x>=1&&y>=1&&x<SIZE.w-1&&y<SIZE.h-1&&(!(x>=25&&x<=27)||y===13||y===14)&&!(x>=11&&x<=14&&y>=6&&y<=8)&&!(x>=18&&x<=21&&y>=6&&y<=8);}
-export function route(s,tx,ty,adjacent=false){tx=Math.round(tx);ty=Math.round(ty);const start=[s.p.x,s.p.y],queue=[start],seen=new Map([[start.join(','),null]]);let end=null;for(let q=0;q<queue.length;q++){const p=queue[q];if((adjacent?Math.max(Math.abs(p[0]-tx),Math.abs(p[1]-ty))<=1:p[0]===tx&&p[1]===ty)){end=p;break;}for(const [dx,dy]of[[0,-1],[1,0],[0,1],[-1,0],[1,1],[-1,1],[1,-1],[-1,-1]]){const n=[p[0]+dx,p[1]+dy],key=n.join(',');if(!walkable(...n)||seen.has(key)||dx&&dy&&(!walkable(p[0]+dx,p[1])||!walkable(p[0],p[1]+dy)))continue;seen.set(key,p);queue.push(n);}}if(!end)return null;const path=[];while(end.join(',')!==start.join(',')){path.unshift({x:end[0],y:end[1]});end=seen.get(end.join(','));}return path;}
-export function walk(s,x,y){const p=route(s,x,y);if(!p){log(s,'You cannot reach that tile. Try the bridge.');return false;}s.path=p;s.action=null;s.dialog=null;return true;}
-export function interact(s,id){const n=NODES.find(n=>n.id===id);if(!n)return false;s.selected=id;const path=route(s,n.x,n.y,true);if(!path){log(s,'There is no path to that.');return false;}if(s.nodes[id].respawn>s.tick){log(s,'This resource is replenishing. Try another.');return false;}s.path=path;s.action={id,wait:0};s.dialog=null;return true;}
-export function stop(s){s.action=null;s.path=[];s.dialog=null;}
-function needs(s,id){if(count(s,id))return true;log(s,`You need ${ITEMS[id].name.toLowerCase()} in your backpack.`);s.action=null;return false;}
-function produce(s,id,skill,xp){if(!add(s,id)){log(s,'Your backpack is full. Bank or sell some items.');s.action=null;return false;}gain(s,skill,xp);log(s,`You receive ${ITEMS[id].name.toLowerCase()}.`);return true;}
-export function useItem(s,index){const v=s.inventory[index];if(!v)return;const item=ITEMS[v.id];if(item.heal){if(s.tick<(s.eatAfter||0)){log(s,'You are still eating.');return;}if(s.p.hp>=level(s.skills.Hitpoints)){log(s,'You are already at full health.');return;}remove(s,v.id);s.p.hp=Math.min(level(s.skills.Hitpoints),s.p.hp+item.heal);s.eatAfter=s.tick+3;if(s.action)s.action.wait=Math.max(s.action.wait,3);log(s,`You eat ${item.name.toLowerCase()} and restore ${item.heal} HP.`);}else if(item.weapon||item.defence){const slot=item.weapon?'weapon':'shield',previous=s.equipment[slot];remove(s,v.id);s.equipment[slot]=v.id;if(previous)add(s,previous);log(s,`You equip the ${item.name.toLowerCase()}.`);}else if(v.id==='bones'){remove(s,'bones');gain(s,'Prayer',4.5);log(s,'You bury the bones.');}else if(v.id==='logs'||v.id==='oak'){if(!needs(s,'tinderbox'))return;if(v.id==='oak'&&level(s.skills.Firemaking)<15){log(s,'Oak logs need Firemaking 15.');return;}remove(s,v.id);gain(s,'Firemaking',v.id==='oak'?60:40);s.fire={x:s.p.x,y:s.p.y,until:s.tick+100};log(s,'You light a fire. Use the Campfire button to cook.');}else log(s,`${item.name}: ${item.tool?'carry this tool to use its activity.':'take it to the right workshop, bank, or shop.'}`);}
-export function transfer(s,id,toBank=true){if(s.dialog!=='bank')return false;const from=toBank?'inventory':'bank',to=toBank?'bank':'inventory';if(!count(s,id,from)||!add(s,id,1,to))return false;remove(s,id,1,from);return true;}
-export function depositAll(s){if(s.dialog!=='bank')return;for(const v of [...s.inventory]){add(s,v.id,v.qty,'bank');}s.inventory=[];log(s,'All backpack items are safely banked.');}
-export function trade(s,id,buy=true){if(s.dialog!=='shop'||!ITEMS[id]||id==='coins'||id==='token')return false;const price=buy?Math.max(1,ITEMS[id].value*2):Math.floor(ITEMS[id].value/2);if(buy){if(count(s,'coins')<price){log(s,'You do not have enough coins.');return false;}if(!add(s,id)){log(s,'Your backpack is full.');return false;}remove(s,'coins',price);}else{if(!count(s,id))return false;const copy=structuredClone(s.inventory);remove(s,id);if(price&&!add(s,'coins',price)){s.inventory=copy;log(s,'Make room for coins first.');return false;}}log(s,`${buy?'Bought':'Sold'} ${ITEMS[id].name.toLowerCase()} for ${price} coins.`);return true;}
-export function quest(s,id){const q=QUESTS.find(q=>q.id===id);if(!q||s.dialog!=='npc')return false;const status=s.quests[id];if(!status){s.quests[id]='active';log(s,`Quest started: ${q.name}.`);return true;}if(status==='done')return false;if(q.items&&!Object.entries(q.items).every(([id,n])=>count(s,id)>=n)||q.crafted&&!s.crafted||q.kills&&s.kills<q.kills){log(s,'The task is not finished yet. Check your quest journal.');return false;}if(q.items)for(const[id,n]of Object.entries(q.items))remove(s,id,n);s.quests[id]='done';const reward=id==='hearth'?75:id==='forge'?100:150;if(!add(s,'coins',reward))add(s,'coins',reward,'bank');gain(s,id==='hearth'?'Cooking':id==='forge'?'Smithing':'Attack',id==='forge'?200:150);if(id==='watch'){if(!add(s,'token'))add(s,'token',1,'bank');}log(s,`Quest complete: ${q.name}! ${q.reward}.`);return true;}
-// Standard fire/range shrimps success numerators from the OSRS Wiki table (over 256).
-export const SHRIMP_COOK_CHANCE=[129,133,137,141,145,149,153,156,160,164,168,172,176,180,184,188,192,196,200,203,207,211,215,219,223,227,231,235,239,243,247,250,254,256];
-export function cook(s){if(!count(s,'raw')){log(s,'You have no raw shrimps.');s.action=null;return;}remove(s,'raw');if(level(s.skills.Cooking)>=34||random(s)<SHRIMP_COOK_CHANCE[Math.min(33,level(s.skills.Cooking)-1)]/256){add(s,'shrimp');gain(s,'Cooking',30);log(s,'You successfully cook some shrimps.');}else{add(s,'burnt');log(s,'You accidentally burn the shrimps.');}}
-export function tick(s){if(s.paused)return;s.tick++;s.events=[];if(s.tick%100===0)s.p.hp=Math.min(level(s.skills.Hitpoints),s.p.hp+1);if(!s.p.run||!s.path.length)s.p.energy=Math.min(100,s.p.energy+.25);if(s.path.length){const steps=s.p.run&&s.p.energy>=1?2:1;for(let i=0;i<steps&&s.path.length;i++){const p=s.path.shift();s.p.x=p.x;s.p.y=p.y;}if(steps===2)s.p.energy=Math.max(0,s.p.energy-1);return;}if(!s.action)return;const a=s.action,n=NODES.find(n=>n.id===a.id);if(a.id==='fire'){if(!s.fire||s.fire.until<=s.tick){log(s,'The fire has burnt out.');s.action=null;return;}if(a.wait-->0)return;cook(s);a.wait=3;return;}if(!n){s.action=null;return;}if(a.wait-->0)return;const ns=s.nodes[n.id];if(ns.respawn>s.tick){s.action=null;return;}
- if(['npc','bank','shop'].includes(n.kind)){s.dialog=n.kind;s.action=null;return;}
- if(n.kind==='altar'){s.p.prayer=level(s.skills.Prayer);log(s,'You restore your prayer points at the altar.');s.action=null;return;}
- if(n.kind==='tree'||n.kind==='oak'){if(!needs(s,'axe'))return;if(n.kind==='oak'&&level(s.skills.Woodcutting)<15){log(s,'You need Woodcutting level 15 to chop this oak.');s.action=null;return;}a.wait=3;if(n.kind==='oak'&&ns.activeUntil&&ns.activeUntil<=s.tick){ns.respawn=s.tick+20;ns.activeUntil=null;s.action=null;log(s,'The oak is depleted.');return;}if(random(s)<.65){if(n.kind==='oak'&&!ns.activeUntil)ns.activeUntil=s.tick+45;if(produce(s,n.kind==='oak'?'oak':'logs','Woodcutting',n.kind==='oak'?37.5:25)&&n.kind==='tree'){ns.respawn=s.tick+20;log(s,'The tree is depleted.');s.action=null;}}return;}
- if(n.kind==='copper'||n.kind==='tin'){if(!needs(s,'pickaxe'))return;a.wait=3;if(random(s)<.8){if(produce(s,n.kind,'Mining',17.5)){ns.respawn=s.tick+4;s.action=null;}}return;}
- if(n.kind==='fish'){if(!needs(s,'net'))return;a.wait=4;if(random(s)<.7)produce(s,'raw','Fishing',10);return;}
- if(n.kind==='furnace'){if(!count(s,'copper')||!count(s,'tin')){log(s,'Smelting bronze needs 1 copper ore and 1 tin ore.');s.action=null;return;}remove(s,'copper');remove(s,'tin');add(s,'bar');gain(s,'Smithing',6.2);log(s,'You smelt a bronze bar.');a.wait=2;return;}
- if(n.kind==='anvil'){if(!needs(s,'hammer'))return;if(!count(s,'bar')){log(s,'You need a bronze bar to forge a dagger.');s.action=null;return;}remove(s,'bar');add(s,'dagger');gain(s,'Smithing',12.5);s.crafted++;log(s,'You forge a bronze dagger.');a.wait=4;return;}
- if(n.kind==='range'){cook(s);a.wait=3;return;}
- if(n.hp){const w=ITEMS[s.equipment.weapon],attack=level(s.skills.Attack)+(w?.attack||0)+8+(s.style==='Attack'?3:0),defence=n.defence+9;const chance=attack>defence?1-(defence+2)/(2*(attack+1)):attack/(2*(defence+1));const max=Math.max(1,Math.floor(.5+(level(s.skills.Strength)+8+(s.style==='Strength'?3:0))*((w?.strength||0)+64)/640));const damage=Math.min(ns.hp,random(s)<chance?Math.floor(random(s)*(max+1)):0);ns.hp-=damage;s.events.push({kind:'hit',text:String(damage),x:n.x,y:n.y});if(damage){gain(s,s.style,4*damage);gain(s,'Hitpoints',1.33*damage);}a.wait=(w?.weapon||4)-1;if(ns.hp<=0){ns.hp=n.hp;ns.respawn=s.tick+25;s.action=null;s.loot={x:n.x,y:n.y,items:[{id:'bones',qty:1},{id:'coins',qty:n.kind==='goblin'?10:3}]};if(n.kind==='goblin')s.kills++;log(s,`You defeat the ${n.name.toLowerCase()}. Take its nearby loot.`);return;}const pdef=level(s.skills.Defence)+8+(ITEMS[s.equipment.shield]?.defence||0)+(s.style==='Defence'?3:0),hit=random(s)<n.attack/(n.attack+pdef)?Math.floor(random(s)*(n.maxHit+1)):0;s.p.hp-=hit;s.events.push({kind:'hurt',text:String(hit),x:s.p.x,y:s.p.y});if(s.p.hp<=0){s.p.hp=level(s.skills.Hitpoints);s.p.x=16;s.p.y=17;stop(s);const loss=Math.floor(count(s,'coins')*.1);remove(s,'coins',loss);log(s,`You wake in the village. Lost ${loss} coins; your equipment is safe. This valley uses forgiving death rules.`);}}
+export const XP = [0];
+let xpSum = 0;
+for (let n = 1; n < 99; n++) {
+  xpSum += Math.floor(n + 300 * 2 ** (n / 7));
+  XP.push(Math.floor(xpSum / 4));
 }
-export function takeLoot(s){if(!s.loot)return;const p=route(s,s.loot.x,s.loot.y,true);if(p===null||p.length>1){log(s,'Move beside the dropped loot first.');return;}for(const v of [...s.loot.items])if(add(s,v.id,v.qty))s.loot.items.splice(s.loot.items.indexOf(v),1);if(!s.loot.items.length)s.loot=null;else log(s,'Backpack full. Make room for the remaining loot.');}
-export function save(s){const data=structuredClone(s);data.path=[];data.action=null;data.dialog=null;data.events=[];data.paused=false;data.savedAt=new Date().toISOString();return JSON.stringify(data);}
-export function restore(raw){try{
- const v=JSON.parse(raw),s=createGame();
- if(!v||v.version!==1||!v.p||!Array.isArray(v.inventory)||!Array.isArray(v.bank)||v.inventory.length>28)return null;
- for(const key of SKILLS)if(!Number.isFinite(v.skills?.[key])||v.skills[key]<0||v.skills[key]>200000000)return null;
- for(const [name,bag]of [['inventory',v.inventory],['bank',v.bank]])for(const item of bag)if(!item||!ITEMS[item.id]||!Number.isSafeInteger(item.qty)||item.qty<1||item.qty>100000000||name==='inventory'&&!ITEMS[item.id].stack&&item.qty!==1)return null;
- if(!walkable(v.p.x,v.p.y)||!Number.isInteger(v.p.x)||!Number.isInteger(v.p.y))return null;
- if(!['Attack','Strength','Defence'].includes(v.style))return null;
- if(!ITEMS[v.equipment?.weapon]?.weapon)return null;
- if(v.equipment.shield!==null&&!ITEMS[v.equipment.shield]?.defence)return null;
- if(!Number.isSafeInteger(v.tick)||v.tick<0||!Number.isInteger(v.seed)||v.seed<0||v.seed>4294967295)return null;
- for(const key of ['kills','crafted'])if(!Number.isSafeInteger(v[key])||v[key]<0)return null;
- // Copy only durable fields. Do not trust arbitrary save properties or timers.
- s.seed=v.seed;s.tick=v.tick;s.style=v.style;s.kills=v.kills;s.crafted=v.crafted;
- s.skills=Object.fromEntries(SKILLS.map(k=>[k,v.skills[k]]));
- s.inventory=v.inventory.map(({id,qty})=>({id,qty}));s.bank=v.bank.map(({id,qty})=>({id,qty}));
- s.equipment={weapon:v.equipment.weapon,shield:v.equipment.shield};
- s.p={x:v.p.x,y:v.p.y,hp:Math.max(1,Math.min(level(s.skills.Hitpoints),Number(v.p.hp)||10)),energy:Math.max(0,Math.min(100,Number(v.p.energy)||0)),run:v.p.run===true,prayer:Math.max(0,Math.min(level(s.skills.Prayer),Number(v.p.prayer)||0))};
- s.quests=Object.fromEntries(QUESTS.map(q=>[q.id,['active','done'].includes(v.quests?.[q.id])?v.quests[q.id]:undefined]).filter(([,v])=>v));
- s.logs=Array.isArray(v.logs)?v.logs.filter(t=>typeof t==='string').slice(-40):[];
- s.savedAt=typeof v.savedAt==='string'?v.savedAt:null;
- s.loot=null;
- if(v.fire&&Number.isInteger(v.fire.x)&&Number.isInteger(v.fire.y)&&walkable(v.fire.x,v.fire.y)&&Number.isSafeInteger(v.fire.until)&&v.fire.until>s.tick&&v.fire.until<=s.tick+100)s.fire={x:v.fire.x,y:v.fire.y,until:v.fire.until};
- return s;
-}catch{return null;}}
+export const level = (xp) => {
+  let l = 1;
+  while (l < 99 && xp >= XP[l]) l++;
+  return l;
+};
+export const ITEMS = {
+  axe: { name: "Bronze axe", icon: "🪓", value: 16, tool: true },
+  pickaxe: { name: "Bronze pickaxe", icon: "⛏", value: 10, tool: true },
+  hammer: { name: "Hammer", icon: "⚒", value: 1, tool: true },
+  net: { name: "Small fishing net", icon: "◈", value: 5, tool: true },
+  tinderbox: { name: "Tinderbox", icon: "▣", value: 1, tool: true },
+  coins: { name: "Coins", icon: "●", stack: true, value: 1 },
+  logs: { name: "Logs", icon: "🪵", value: 4 },
+  oak: { name: "Oak logs", icon: "🪵", value: 10 },
+  copper: { name: "Copper ore", icon: "◆", value: 3 },
+  tin: { name: "Tin ore", icon: "◆", value: 3 },
+  bar: { name: "Bronze bar", icon: "▰", value: 8 },
+  raw: { name: "Raw shrimps", icon: "🦐", value: 5 },
+  shrimp: { name: "Shrimps", icon: "🦐", value: 8, heal: 3 },
+  burnt: { name: "Burnt shrimps", icon: "♨", value: 0 },
+  bones: { name: "Bones", icon: "🦴", value: 1 },
+  dagger: {
+    name: "Bronze dagger",
+    icon: "†",
+    value: 10,
+    weapon: 4,
+    attack: 4,
+    strength: 3,
+  },
+  sword: {
+    name: "Bronze sword",
+    icon: "⚔",
+    value: 26,
+    weapon: 4,
+    attack: 7,
+    strength: 6,
+  },
+  shield: { name: "Wooden shield", icon: "⬡", value: 20, defence: 6 },
+  token: { name: "Valley seal", icon: "✦", value: 0, stack: true },
+};
+export const NODES = [
+  {
+    id: "guide",
+    name: "Warden Elowen",
+    kind: "npc",
+    x: 16,
+    y: 14,
+    action: "Talk",
+    desc: "The valley warden has work for a new adventurer.",
+  },
+  {
+    id: "bank",
+    name: "Valley bank",
+    kind: "bank",
+    x: 13,
+    y: 10,
+    action: "Bank",
+    desc: "Store your resources, then return to the wilds.",
+  },
+  {
+    id: "shop",
+    name: "Merrin’s general store",
+    kind: "shop",
+    x: 19,
+    y: 10,
+    action: "Trade",
+    desc: "Buy equipment or sell gathered goods for coins.",
+  },
+  {
+    id: "furnace",
+    name: "Foundry furnace",
+    kind: "furnace",
+    x: 10,
+    y: 15,
+    action: "Smelt",
+    desc: "Combine 1 copper ore and 1 tin ore into a bronze bar. 6.2 Smithing XP.",
+  },
+  {
+    id: "anvil",
+    name: "Smith’s anvil",
+    kind: "anvil",
+    x: 12,
+    y: 17,
+    action: "Smith",
+    desc: "A hammer and 1 bronze bar forge a bronze dagger. 12.5 Smithing XP.",
+  },
+  {
+    id: "range",
+    name: "Cooking range",
+    kind: "range",
+    x: 19,
+    y: 16,
+    action: "Cook",
+    desc: "Cook raw shrimps. Success grants 30 Cooking XP; food restores 3 HP.",
+  },
+  {
+    id: "tree1",
+    name: "Tree",
+    kind: "tree",
+    x: 8,
+    y: 10,
+    action: "Chop",
+    desc: "Bronze axe required. Logs give 25 Woodcutting XP.",
+  },
+  {
+    id: "tree2",
+    name: "Tree",
+    kind: "tree",
+    x: 6,
+    y: 14,
+    action: "Chop",
+    desc: "Bronze axe required. Logs give 25 Woodcutting XP.",
+  },
+  {
+    id: "tree3",
+    name: "Tree",
+    kind: "tree",
+    x: 8,
+    y: 18,
+    action: "Chop",
+    desc: "Bronze axe required. Logs give 25 Woodcutting XP.",
+  },
+  {
+    id: "oak",
+    name: "Old oak",
+    kind: "oak",
+    x: 5,
+    y: 7,
+    action: "Chop",
+    desc: "Requires Woodcutting 15. Oak logs give 37.5 XP.",
+  },
+  {
+    id: "copper1",
+    name: "Copper rock",
+    kind: "copper",
+    x: 9,
+    y: 22,
+    action: "Mine",
+    desc: "Bronze pickaxe required. Copper gives 17.5 Mining XP.",
+  },
+  {
+    id: "copper2",
+    name: "Copper rock",
+    kind: "copper",
+    x: 11,
+    y: 24,
+    action: "Mine",
+    desc: "Copper gives 17.5 Mining XP.",
+  },
+  {
+    id: "tin1",
+    name: "Tin rock",
+    kind: "tin",
+    x: 13,
+    y: 23,
+    action: "Mine",
+    desc: "Bronze pickaxe required. Tin gives 17.5 Mining XP.",
+  },
+  {
+    id: "fish1",
+    name: "Net fishing spot",
+    kind: "fish",
+    x: 24,
+    y: 15,
+    action: "Fish",
+    desc: "Small fishing net required. Catch shrimps for 10 Fishing XP.",
+  },
+  {
+    id: "fish2",
+    name: "Net fishing spot",
+    kind: "fish",
+    x: 24,
+    y: 20,
+    action: "Fish",
+    desc: "Cast your net from the riverbank.",
+  },
+  {
+    id: "rat1",
+    name: "Giant rat",
+    kind: "rat",
+    x: 19,
+    y: 22,
+    action: "Attack",
+    hp: 5,
+    attack: 8,
+    maxHit: 1,
+    defence: 4,
+    desc: "A level 3 giant rat. Auto-attacks until defeated or you walk away.",
+  },
+  {
+    id: "rat2",
+    name: "Giant rat",
+    kind: "rat",
+    x: 22,
+    y: 24,
+    action: "Attack",
+    hp: 5,
+    attack: 8,
+    maxHit: 1,
+    defence: 4,
+    desc: "A level 3 giant rat. Drops bones and coins.",
+  },
+  {
+    id: "goblin1",
+    name: "Mire goblin",
+    kind: "goblin",
+    x: 30,
+    y: 10,
+    action: "Attack",
+    hp: 12,
+    attack: 15,
+    maxHit: 2,
+    defence: 9,
+    desc: "A level 5 goblin. Cross the bridge with food and equipment.",
+  },
+  {
+    id: "goblin2",
+    name: "Mire goblin",
+    kind: "goblin",
+    x: 32,
+    y: 16,
+    action: "Attack",
+    hp: 12,
+    attack: 15,
+    maxHit: 2,
+    defence: 9,
+    desc: "A level 5 goblin. Drops bones and coins.",
+  },
+  {
+    id: "altar",
+    name: "Wayside altar",
+    kind: "altar",
+    x: 17,
+    y: 5,
+    action: "Pray",
+    desc: "A quiet sanctuary. Restores your prayer points.",
+  },
+];
+export const QUESTS = [
+  {
+    id: "hearth",
+    name: "A warm welcome",
+    brief: "Bring 3 cooked shrimps to Warden Elowen.",
+    reward: "75 coins · 150 Cooking XP",
+    items: { shrimp: 3 },
+  },
+  {
+    id: "forge",
+    name: "From earth to bronze",
+    brief: "Forge a bronze dagger and bring it to Elowen.",
+    reward: "100 coins · 200 Smithing XP",
+    items: { dagger: 1 },
+    crafted: true,
+  },
+  {
+    id: "watch",
+    name: "Across the water",
+    brief: "Defeat 3 mire goblins, then report to Elowen.",
+    reward: "150 coins · 150 Attack XP · Valley seal",
+    kills: 3,
+  },
+];
+export function createGame(seed = Date.now()) {
+  return {
+    version: 1,
+    seed: seed >>> 0,
+    tick: 0,
+    p: { x: 16, y: 17, hp: 10, energy: 100, run: false, prayer: 1 },
+    skills: Object.fromEntries(
+      SKILLS.map((k) => [k, k === "Hitpoints" ? 1154 : 0]),
+    ),
+    inventory: [
+      { id: "axe", qty: 1 },
+      { id: "pickaxe", qty: 1 },
+      { id: "net", qty: 1 },
+      { id: "tinderbox", qty: 1 },
+      { id: "hammer", qty: 1 },
+      { id: "coins", qty: 25 },
+    ],
+    bank: [],
+    equipment: { weapon: "dagger", shield: null },
+    style: "Attack",
+    path: [],
+    action: null,
+    selected: null,
+    nodes: Object.fromEntries(
+      NODES.map((n) => [n.id, { hp: n.hp ?? 0, respawn: 0 }]),
+    ),
+    quests: {},
+    kills: 0,
+    crafted: 0,
+    logs: [
+      "Welcome to Embervale. Talk to Warden Elowen, or choose your own path.",
+    ],
+    events: [],
+    dialog: null,
+    paused: false,
+    savedAt: null,
+  };
+}
+export function random(s) {
+  let x = s.seed || 123456789;
+  x ^= x << 13;
+  x ^= x >>> 17;
+  x ^= x << 5;
+  s.seed = x >>> 0;
+  return s.seed / 4294967296;
+}
+export const count = (s, id, bag = "inventory") =>
+  s[bag].filter((v) => v.id === id).reduce((a, v) => a + v.qty, 0);
+export function add(s, id, qty = 1, bag = "inventory") {
+  if (
+    !Object.hasOwn(ITEMS, id) ||
+    !Number.isSafeInteger(qty) ||
+    qty < 1 ||
+    !["inventory", "bank"].includes(bag)
+  )
+    return false;
+  const list = s[bag],
+    stack = bag === "bank" || ITEMS[id].stack;
+  const existing = stack && list.find((v) => v.id === id);
+  if (
+    bag === "inventory" &&
+    list.length + (existing ? 0 : stack ? 1 : qty) > 28
+  )
+    return false;
+  if (existing) existing.qty += qty;
+  else if (stack) list.push({ id, qty });
+  else for (let n = 0; n < qty; n++) list.push({ id, qty: 1 });
+  return true;
+}
+export function remove(s, id, qty = 1, bag = "inventory") {
+  if (
+    !Object.hasOwn(ITEMS, id) ||
+    !Number.isSafeInteger(qty) ||
+    qty < 0 ||
+    !["inventory", "bank"].includes(bag) ||
+    count(s, id, bag) < qty
+  )
+    return false;
+  for (let i = s[bag].length - 1; i >= 0 && qty; i--) {
+    const v = s[bag][i];
+    if (v.id !== id) continue;
+    const n = Math.min(qty, v.qty);
+    v.qty -= n;
+    qty -= n;
+    if (!v.qty) s[bag].splice(i, 1);
+  }
+  return true;
+}
+export function log(s, msg) {
+  s.logs.push(msg);
+  s.logs = s.logs.slice(-40);
+}
+export function gain(s, skill, amount) {
+  const before = level(s.skills[skill]);
+  s.skills[skill] += amount;
+  s.events.push({
+    kind: "xp",
+    text: `+${amount} ${skill}`,
+    x: s.p.x,
+    y: s.p.y,
+  });
+  const after = level(s.skills[skill]);
+  if (after > before) {
+    log(s, `${skill} level ${after}! New possibilities await.`);
+    if (skill === "Hitpoints") s.p.hp += after - before;
+  }
+}
+export function walkable(x, y) {
+  return (
+    x >= 1 &&
+    y >= 1 &&
+    x < SIZE.w - 1 &&
+    y < SIZE.h - 1 &&
+    (!(x >= 25 && x <= 27) || y === 13 || y === 14) &&
+    !(x >= 11 && x <= 14 && y >= 6 && y <= 8) &&
+    !(x >= 18 && x <= 21 && y >= 6 && y <= 8)
+  );
+}
+export function route(s, tx, ty, adjacent = false) {
+  tx = Math.round(tx);
+  ty = Math.round(ty);
+  const start = [s.p.x, s.p.y],
+    queue = [start],
+    seen = new Map([[start.join(","), null]]);
+  let end = null;
+  for (let q = 0; q < queue.length; q++) {
+    const p = queue[q];
+    if (
+      adjacent
+        ? Math.max(Math.abs(p[0] - tx), Math.abs(p[1] - ty)) <= 1
+        : p[0] === tx && p[1] === ty
+    ) {
+      end = p;
+      break;
+    }
+    for (const [dx, dy] of [
+      [0, -1],
+      [1, 0],
+      [0, 1],
+      [-1, 0],
+      [1, 1],
+      [-1, 1],
+      [1, -1],
+      [-1, -1],
+    ]) {
+      const n = [p[0] + dx, p[1] + dy],
+        key = n.join(",");
+      if (
+        !walkable(...n) ||
+        seen.has(key) ||
+        (dx && dy && (!walkable(p[0] + dx, p[1]) || !walkable(p[0], p[1] + dy)))
+      )
+        continue;
+      seen.set(key, p);
+      queue.push(n);
+    }
+  }
+  if (!end) return null;
+  const path = [];
+  while (end.join(",") !== start.join(",")) {
+    path.unshift({ x: end[0], y: end[1] });
+    end = seen.get(end.join(","));
+  }
+  return path;
+}
+export function walk(s, x, y) {
+  const p = route(s, x, y);
+  if (!p) {
+    log(s, "You cannot reach that tile. Try the bridge.");
+    return false;
+  }
+  s.path = p;
+  s.action = null;
+  s.dialog = null;
+  return true;
+}
+export function interact(s, id) {
+  const n = NODES.find((n) => n.id === id);
+  if (!n) return false;
+  s.selected = id;
+  const path = route(s, n.x, n.y, true);
+  if (!path) {
+    log(s, "There is no path to that.");
+    return false;
+  }
+  if (s.nodes[id].respawn > s.tick) {
+    log(s, "This resource is replenishing. Try another.");
+    return false;
+  }
+  s.path = path;
+  s.action = { id, wait: 0 };
+  s.dialog = null;
+  return true;
+}
+export function stop(s) {
+  s.action = null;
+  s.path = [];
+  s.dialog = null;
+}
+function needs(s, id) {
+  if (count(s, id)) return true;
+  log(s, `You need ${ITEMS[id].name.toLowerCase()} in your backpack.`);
+  s.action = null;
+  return false;
+}
+function produce(s, id, skill, xp) {
+  if (!add(s, id)) {
+    log(s, "Your backpack is full. Bank or sell some items.");
+    s.action = null;
+    return false;
+  }
+  gain(s, skill, xp);
+  log(s, `You receive ${ITEMS[id].name.toLowerCase()}.`);
+  return true;
+}
+export function useItem(s, index) {
+  const v = s.inventory[index];
+  if (!v) return;
+  const item = ITEMS[v.id];
+  if (item.heal) {
+    if (s.tick < (s.eatAfter || 0)) {
+      log(s, "You are still eating.");
+      return;
+    }
+    if (s.p.hp >= level(s.skills.Hitpoints)) {
+      log(s, "You are already at full health.");
+      return;
+    }
+    remove(s, v.id);
+    s.p.hp = Math.min(level(s.skills.Hitpoints), s.p.hp + item.heal);
+    s.eatAfter = s.tick + 3;
+    if (s.action) s.action.wait = Math.max(s.action.wait, 3);
+    log(s, `You eat ${item.name.toLowerCase()} and restore ${item.heal} HP.`);
+  } else if (item.weapon || item.defence) {
+    const slot = item.weapon ? "weapon" : "shield",
+      previous = s.equipment[slot];
+    remove(s, v.id);
+    s.equipment[slot] = v.id;
+    if (previous) add(s, previous);
+    log(s, `You equip the ${item.name.toLowerCase()}.`);
+  } else if (v.id === "bones") {
+    remove(s, "bones");
+    gain(s, "Prayer", 4.5);
+    log(s, "You bury the bones.");
+  } else if (v.id === "logs" || v.id === "oak") {
+    if (!needs(s, "tinderbox")) return;
+    if (v.id === "oak" && level(s.skills.Firemaking) < 15) {
+      log(s, "Oak logs need Firemaking 15.");
+      return;
+    }
+    remove(s, v.id);
+    gain(s, "Firemaking", v.id === "oak" ? 60 : 40);
+    s.fire = { x: s.p.x, y: s.p.y, until: s.tick + 100 };
+    log(s, "You light a fire. Use the Campfire button to cook.");
+  } else
+    log(
+      s,
+      `${item.name}: ${item.tool ? "carry this tool to use its activity." : "take it to the right workshop, bank, or shop."}`,
+    );
+}
+export function transfer(s, id, toBank = true) {
+  if (s.dialog !== "bank") return false;
+  const from = toBank ? "inventory" : "bank",
+    to = toBank ? "bank" : "inventory";
+  if (!count(s, id, from) || !add(s, id, 1, to)) return false;
+  remove(s, id, 1, from);
+  return true;
+}
+export function depositAll(s) {
+  if (s.dialog !== "bank") return;
+  for (const v of [...s.inventory]) {
+    add(s, v.id, v.qty, "bank");
+  }
+  s.inventory = [];
+  log(s, "All backpack items are safely banked.");
+}
+export function trade(s, id, buy = true) {
+  if (
+    s.dialog !== "shop" ||
+    !Object.hasOwn(ITEMS, id) ||
+    id === "coins" ||
+    id === "token"
+  )
+    return false;
+  const price = buy
+    ? Math.max(1, ITEMS[id].value * 2)
+    : Math.floor(ITEMS[id].value / 2);
+  if (buy) {
+    if (count(s, "coins") < price) {
+      log(s, "You do not have enough coins.");
+      return false;
+    }
+    if (!add(s, id)) {
+      log(s, "Your backpack is full.");
+      return false;
+    }
+    remove(s, "coins", price);
+  } else {
+    if (!count(s, id)) return false;
+    const copy = structuredClone(s.inventory);
+    remove(s, id);
+    if (price && !add(s, "coins", price)) {
+      s.inventory = copy;
+      log(s, "Make room for coins first.");
+      return false;
+    }
+  }
+  log(
+    s,
+    `${buy ? "Bought" : "Sold"} ${ITEMS[id].name.toLowerCase()} for ${price} coins.`,
+  );
+  return true;
+}
+export function quest(s, id) {
+  const q = QUESTS.find((q) => q.id === id);
+  if (!q || s.dialog !== "npc") return false;
+  const status = s.quests[id];
+  if (!status) {
+    s.quests[id] = "active";
+    log(s, `Quest started: ${q.name}.`);
+    return true;
+  }
+  if (status === "done") return false;
+  if (
+    (q.items &&
+      !Object.entries(q.items).every(([id, n]) => count(s, id) >= n)) ||
+    (q.crafted && !s.crafted) ||
+    (q.kills && s.kills < q.kills)
+  ) {
+    log(s, "The task is not finished yet. Check your quest journal.");
+    return false;
+  }
+  if (q.items) for (const [id, n] of Object.entries(q.items)) remove(s, id, n);
+  s.quests[id] = "done";
+  const reward = id === "hearth" ? 75 : id === "forge" ? 100 : 150;
+  if (!add(s, "coins", reward)) add(s, "coins", reward, "bank");
+  gain(
+    s,
+    id === "hearth" ? "Cooking" : id === "forge" ? "Smithing" : "Attack",
+    id === "forge" ? 200 : 150,
+  );
+  if (id === "watch") {
+    if (!add(s, "token")) add(s, "token", 1, "bank");
+  }
+  log(s, `Quest complete: ${q.name}! ${q.reward}.`);
+  return true;
+}
+// Standard fire/range shrimps success numerators from the OSRS Wiki table (over 256).
+export const SHRIMP_COOK_CHANCE = [
+  129, 133, 137, 141, 145, 149, 153, 156, 160, 164, 168, 172, 176, 180, 184,
+  188, 192, 196, 200, 203, 207, 211, 215, 219, 223, 227, 231, 235, 239, 243,
+  247, 250, 254, 256,
+];
+export function cook(s) {
+  if (!count(s, "raw")) {
+    log(s, "You have no raw shrimps.");
+    s.action = null;
+    return;
+  }
+  remove(s, "raw");
+  if (
+    level(s.skills.Cooking) >= 34 ||
+    random(s) <
+      SHRIMP_COOK_CHANCE[Math.min(33, level(s.skills.Cooking) - 1)] / 256
+  ) {
+    add(s, "shrimp");
+    gain(s, "Cooking", 30);
+    log(s, "You successfully cook some shrimps.");
+  } else {
+    add(s, "burnt");
+    log(s, "You accidentally burn the shrimps.");
+  }
+}
+export function tick(s) {
+  if (s.paused) return;
+  s.tick++;
+  s.events = [];
+  if (s.tick % 100 === 0)
+    s.p.hp = Math.min(level(s.skills.Hitpoints), s.p.hp + 1);
+  if (!s.p.run || !s.path.length) s.p.energy = Math.min(100, s.p.energy + 0.25);
+  if (s.path.length) {
+    const steps = s.p.run && s.p.energy >= 1 ? 2 : 1;
+    for (let i = 0; i < steps && s.path.length; i++) {
+      const p = s.path.shift();
+      s.p.x = p.x;
+      s.p.y = p.y;
+    }
+    if (steps === 2) s.p.energy = Math.max(0, s.p.energy - 1);
+    return;
+  }
+  if (!s.action) return;
+  const a = s.action,
+    n = NODES.find((n) => n.id === a.id);
+  if (a.id === "fire") {
+    if (!s.fire || s.fire.until <= s.tick) {
+      log(s, "The fire has burnt out.");
+      s.action = null;
+      return;
+    }
+    if (a.wait-- > 0) return;
+    cook(s);
+    a.wait = 3;
+    return;
+  }
+  if (!n) {
+    s.action = null;
+    return;
+  }
+  if (a.wait-- > 0) return;
+  const ns = s.nodes[n.id];
+  if (ns.respawn > s.tick) {
+    s.action = null;
+    return;
+  }
+  if (["npc", "bank", "shop"].includes(n.kind)) {
+    s.dialog = n.kind;
+    s.action = null;
+    return;
+  }
+  if (n.kind === "altar") {
+    s.p.prayer = level(s.skills.Prayer);
+    log(s, "You restore your prayer points at the altar.");
+    s.action = null;
+    return;
+  }
+  if (n.kind === "tree" || n.kind === "oak") {
+    if (!needs(s, "axe")) return;
+    if (n.kind === "oak" && level(s.skills.Woodcutting) < 15) {
+      log(s, "You need Woodcutting level 15 to chop this oak.");
+      s.action = null;
+      return;
+    }
+    a.wait = 3;
+    if (n.kind === "oak" && ns.activeUntil && ns.activeUntil <= s.tick) {
+      ns.respawn = s.tick + 20;
+      ns.activeUntil = null;
+      s.action = null;
+      log(s, "The oak is depleted.");
+      return;
+    }
+    if (random(s) < 0.65) {
+      if (n.kind === "oak" && !ns.activeUntil) ns.activeUntil = s.tick + 45;
+      if (
+        produce(
+          s,
+          n.kind === "oak" ? "oak" : "logs",
+          "Woodcutting",
+          n.kind === "oak" ? 37.5 : 25,
+        ) &&
+        n.kind === "tree"
+      ) {
+        ns.respawn = s.tick + 20;
+        log(s, "The tree is depleted.");
+        s.action = null;
+      }
+    }
+    return;
+  }
+  if (n.kind === "copper" || n.kind === "tin") {
+    if (!needs(s, "pickaxe")) return;
+    a.wait = 3;
+    if (random(s) < 0.8) {
+      if (produce(s, n.kind, "Mining", 17.5)) {
+        ns.respawn = s.tick + 4;
+        s.action = null;
+      }
+    }
+    return;
+  }
+  if (n.kind === "fish") {
+    if (!needs(s, "net")) return;
+    a.wait = 4;
+    if (random(s) < 0.7) produce(s, "raw", "Fishing", 10);
+    return;
+  }
+  if (n.kind === "furnace") {
+    if (!count(s, "copper") || !count(s, "tin")) {
+      log(s, "Smelting bronze needs 1 copper ore and 1 tin ore.");
+      s.action = null;
+      return;
+    }
+    remove(s, "copper");
+    remove(s, "tin");
+    add(s, "bar");
+    gain(s, "Smithing", 6.2);
+    log(s, "You smelt a bronze bar.");
+    a.wait = 2;
+    return;
+  }
+  if (n.kind === "anvil") {
+    if (!needs(s, "hammer")) return;
+    if (!count(s, "bar")) {
+      log(s, "You need a bronze bar to forge a dagger.");
+      s.action = null;
+      return;
+    }
+    remove(s, "bar");
+    add(s, "dagger");
+    gain(s, "Smithing", 12.5);
+    s.crafted++;
+    log(s, "You forge a bronze dagger.");
+    a.wait = 4;
+    return;
+  }
+  if (n.kind === "range") {
+    cook(s);
+    a.wait = 3;
+    return;
+  }
+  if (n.hp) {
+    const w = ITEMS[s.equipment.weapon],
+      attack =
+        level(s.skills.Attack) +
+        (w?.attack || 0) +
+        8 +
+        (s.style === "Attack" ? 3 : 0),
+      defence = n.defence + 9;
+    const chance =
+      attack > defence
+        ? 1 - (defence + 2) / (2 * (attack + 1))
+        : attack / (2 * (defence + 1));
+    const max = Math.max(
+      1,
+      Math.floor(
+        0.5 +
+          ((level(s.skills.Strength) + 8 + (s.style === "Strength" ? 3 : 0)) *
+            ((w?.strength || 0) + 64)) /
+            640,
+      ),
+    );
+    const damage = Math.min(
+      ns.hp,
+      random(s) < chance ? Math.floor(random(s) * (max + 1)) : 0,
+    );
+    ns.hp -= damage;
+    s.events.push({ kind: "hit", text: String(damage), x: n.x, y: n.y });
+    if (damage) {
+      gain(s, s.style, 4 * damage);
+      gain(s, "Hitpoints", 1.33 * damage);
+    }
+    a.wait = (w?.weapon || 4) - 1;
+    if (ns.hp <= 0) {
+      ns.hp = n.hp;
+      ns.respawn = s.tick + 25;
+      s.action = null;
+      s.loot = {
+        x: n.x,
+        y: n.y,
+        items: [
+          { id: "bones", qty: 1 },
+          { id: "coins", qty: n.kind === "goblin" ? 10 : 3 },
+        ],
+      };
+      if (n.kind === "goblin") s.kills++;
+      log(s, `You defeat the ${n.name.toLowerCase()}. Take its nearby loot.`);
+      return;
+    }
+    const pdef =
+        level(s.skills.Defence) +
+        8 +
+        (ITEMS[s.equipment.shield]?.defence || 0) +
+        (s.style === "Defence" ? 3 : 0),
+      hit =
+        random(s) < n.attack / (n.attack + pdef)
+          ? Math.floor(random(s) * (n.maxHit + 1))
+          : 0;
+    s.p.hp -= hit;
+    s.events.push({ kind: "hurt", text: String(hit), x: s.p.x, y: s.p.y });
+    if (s.p.hp <= 0) {
+      s.p.hp = level(s.skills.Hitpoints);
+      s.p.x = 16;
+      s.p.y = 17;
+      stop(s);
+      const loss = Math.floor(count(s, "coins") * 0.1);
+      remove(s, "coins", loss);
+      log(
+        s,
+        `You wake in the village. Lost ${loss} coins; your equipment is safe. This valley uses forgiving death rules.`,
+      );
+    }
+  }
+}
+export function takeLoot(s) {
+  if (!s.loot) return;
+  const p = route(s, s.loot.x, s.loot.y, true);
+  if (p === null || p.length > 1) {
+    log(s, "Move beside the dropped loot first.");
+    return;
+  }
+  for (const v of [...s.loot.items])
+    if (add(s, v.id, v.qty)) s.loot.items.splice(s.loot.items.indexOf(v), 1);
+  if (!s.loot.items.length) s.loot = null;
+  else log(s, "Backpack full. Make room for the remaining loot.");
+}
+export function save(s) {
+  const data = structuredClone(s);
+  data.path = [];
+  data.action = null;
+  data.dialog = null;
+  data.events = [];
+  data.paused = false;
+  data.savedAt = new Date().toISOString();
+  return JSON.stringify(data);
+}
+export function restore(raw) {
+  try {
+    const v = JSON.parse(raw),
+      s = createGame();
+    if (
+      !v ||
+      v.version !== 1 ||
+      !v.p ||
+      !Array.isArray(v.inventory) ||
+      !Array.isArray(v.bank) ||
+      v.inventory.length > 28
+    )
+      return null;
+    for (const key of SKILLS)
+      if (
+        !Number.isFinite(v.skills?.[key]) ||
+        v.skills[key] < 0 ||
+        v.skills[key] > 200000000
+      )
+        return null;
+    for (const [name, bag] of [
+      ["inventory", v.inventory],
+      ["bank", v.bank],
+    ])
+      for (const item of bag)
+        if (
+          !item ||
+          !Object.hasOwn(ITEMS, item.id) ||
+          !Number.isSafeInteger(item.qty) ||
+          item.qty < 1 ||
+          item.qty > 100000000 ||
+          (name === "inventory" && !ITEMS[item.id].stack && item.qty !== 1)
+        )
+          return null;
+    if (
+      !walkable(v.p.x, v.p.y) ||
+      !Number.isInteger(v.p.x) ||
+      !Number.isInteger(v.p.y)
+    )
+      return null;
+    if (!["Attack", "Strength", "Defence"].includes(v.style)) return null;
+    if (!ITEMS[v.equipment?.weapon]?.weapon) return null;
+    if (v.equipment.shield !== null && !ITEMS[v.equipment.shield]?.defence)
+      return null;
+    if (
+      !Number.isSafeInteger(v.tick) ||
+      v.tick < 0 ||
+      !Number.isInteger(v.seed) ||
+      v.seed < 0 ||
+      v.seed > 4294967295
+    )
+      return null;
+    for (const key of ["kills", "crafted"])
+      if (!Number.isSafeInteger(v[key]) || v[key] < 0) return null;
+    // Copy only durable fields. Do not trust arbitrary save properties or timers.
+    s.seed = v.seed;
+    s.tick = v.tick;
+    s.style = v.style;
+    s.kills = v.kills;
+    s.crafted = v.crafted;
+    s.skills = Object.fromEntries(SKILLS.map((k) => [k, v.skills[k]]));
+    s.inventory = v.inventory.map(({ id, qty }) => ({ id, qty }));
+    s.bank = v.bank.map(({ id, qty }) => ({ id, qty }));
+    s.equipment = { weapon: v.equipment.weapon, shield: v.equipment.shield };
+    s.p = {
+      x: v.p.x,
+      y: v.p.y,
+      hp: Math.max(
+        1,
+        Math.min(level(s.skills.Hitpoints), Number(v.p.hp) || 10),
+      ),
+      energy: Math.max(0, Math.min(100, Number(v.p.energy) || 0)),
+      run: v.p.run === true,
+      prayer: Math.max(
+        0,
+        Math.min(level(s.skills.Prayer), Number(v.p.prayer) || 0),
+      ),
+    };
+    s.quests = Object.fromEntries(
+      QUESTS.map((q) => [
+        q.id,
+        ["active", "done"].includes(v.quests?.[q.id])
+          ? v.quests[q.id]
+          : undefined,
+      ]).filter(([, v]) => v),
+    );
+    s.logs = Array.isArray(v.logs)
+      ? v.logs.filter((t) => typeof t === "string").slice(-40)
+      : [];
+    s.savedAt = typeof v.savedAt === "string" ? v.savedAt : null;
+    s.loot = null;
+    if (
+      v.fire &&
+      Number.isInteger(v.fire.x) &&
+      Number.isInteger(v.fire.y) &&
+      walkable(v.fire.x, v.fire.y) &&
+      Number.isSafeInteger(v.fire.until) &&
+      v.fire.until > s.tick &&
+      v.fire.until <= s.tick + 100
+    )
+      s.fire = { x: v.fire.x, y: v.fire.y, until: v.fire.until };
+    return s;
+  } catch {
+    return null;
+  }
+}
